@@ -16,18 +16,18 @@ print ('import env vrep')
 action_list = []
 for a in range(-1, 2):
     for b in range(-1, 2):
-        # for c in range(-1, 2):
+        for c in range(-1, 2):
             # for d in range(-1, 2):
             #     for e in range(-1, 2):
-        action = []
-        action.append(a)
-        action.append(b)
-        action.append(0)
-        action.append(0)
-        action.append(0)
-        # print action
-        action_list.append(action)
-        # print action_list
+            action = []
+            action.append(a)
+            action.append(b)
+            action.append(c)
+            action.append(0)
+            action.append(0)
+            # print action
+            action_list.append(action)
+            # print action_list
 
 # print action_list
 
@@ -124,8 +124,8 @@ class Simu_env(Env):
     def compute_reward(self, action, path_x, path_y, found_pose):
         is_finish = False
         reward = -1
-        # if action[1] == -1:
-        #     reward -= 1
+        if action[1] == -1:
+            reward -= 1
 
         dist = math.sqrt(path_x[-1]*path_x[-1] + path_y[-1]*path_y[-1])
         # dist = path_x[-1]
@@ -156,8 +156,6 @@ class Simu_env(Env):
         #     self.succed_time = 0 
         #     reward -= 2             # -3
 
-        # if action[1] == -1:
-        #     reward -= 1
 
         # if self.succed_time > 20:
         #     self.game_level += 1

@@ -31,7 +31,6 @@ for a in range(-1, 2):
 
 # print action_list
 
-
 class Simu_env(Env):
     def __init__(self, port_num):
         # super(Vrep_env, self).__init__(port_num)
@@ -41,47 +40,53 @@ class Simu_env(Env):
         # self.title('Vrep_env')
 
         self.port_num = port_num
-        self.reached_index = -1
         self.dist_pre = 100
 
-        self.same_ep = 0
         self.path_used = 1
         self.step_inep = 0
         self.object_num = 0
-        self.game_level = 3
+        self.game_level = 4
         self.succed_time = 0
-        
+        self.pass_ep = 2
+        self.ep_reap_time = 0
+
         self.connect_vrep()
         self.reset()
 
     @property
     def observation_space(self):
-        return Box(low=-np.inf, high=np.inf, shape=(1, 2))
+        return Box(low=-np.inf, high=np.inf, shape=(1, 182))
 
     @property
     def action_space(self):
         return Discrete(len(action_list))
 
     def convert_state(self, laser_points, current_pose, path):
-        # path = np.asarray(path)
-        # laser_points = np.asarray(laser_points)
-        # state = np.append(path, laser_points)
-
-        state = np.asarray(path)
-        state = state.flatten()
+        path = np.asarray(path)
+        laser_points = np.asarray(laser_points)
+        state = np.append(laser_points, path)
+        # state = state.reshape(1, -1, 1)
+        # print (state.shape)
+        
+        # state = np.asarray(path)
+        # state = state.flatten()
         return state
 
     def reset(self):
         # print ('reset')
         self.step_inep = 0
-        self.same_ep = 0
-        time.sleep(1)
-        self.reached_index = -1
-        res, retInts, retFloats, retStrings, retBuffer = self.call_sim_function('rwRobot', 'reset', [self.game_level])
-        
-        res,objs=vrep.simxGetObjects(self.clientID,vrep.sim_handle_all,vrep.simx_opmode_oneshot_wait)
-        self.object_num = len(objs)
-        # print ('object number: ', self.object_num)
+
+        if self.pass_ep < 0:
+            self.ep_reap_time += 1
+        if self.ep_reap_time > 30:
+            self.ep_reap_time = 0
+            self.pass_ep = 1
+            
+        res, retInts, retFloats, retStrings, retBuffer = self.call_sim_function('rwRobot', 'reset', [self.pass_ep * self.game_level])        
+        self.pass_ep = 1
+        # res,objs=vrep.simxGetObjects(self.clientID,vrep.sim_handle_all,vrep.simx_opmode_oneshot_wait)
+        # self.object_num = len(objs)
+        # # print ('object number: ', self.object_num)
 
         state, reward, is_finish, info = self.step([0, 0, 0, 0, 0])
         return state
@@ -89,14 +94,11 @@ class Simu_env(Env):
     def step(self, action):
         self.step_inep += 1
 
-        res,objs=vrep.simxGetObjects(self.clientID,vrep.sim_handle_all,vrep.simx_opmode_oneshot_wait)
-        if self.object_num != len(objs):
-            print('connection failed! ', self.object_num, len(objs))
-            # self.connect_vrep()
-            # state = self.reset()
-            # return Step(observation=state, reward=0, done=False)
+        # res,objs=vrep.simxGetObjects(self.clientID,vrep.sim_handle_all,vrep.simx_opmode_oneshot_wait)
+        # if self.object_num != len(objs):
+        #     print('connection failed! ', self.object_num, len(objs))
+        #     # return Step(observation=state, reward=0, done=False)
 
-            
         if isinstance(action, np.int32) or isinstance(action, int):
             action = action_list[action]
 
@@ -140,25 +142,26 @@ class Simu_env(Env):
             is_finish = True
             # self.succed_time += 1
             reward += 10            # 9
+            # if self.succed_time > 10:
+            #     self.game_level += 1
+            #     self.succed_time = 0
 
         # if dist > 5:                # when too far away to the target
         #     is_finish = True
         #     self.succed_time = 0
         #     reward -= 2             # -3
 
-        if found_pose == 'f':       # when collision or no pose can be found
+        if found_pose == bytearray(b"f"):       # when collision or no pose can be found
             is_finish = True 
             self.succed_time = 0 
             reward -= 10            # -11
+            self.pass_ep = -1
 
-        # if self.step_inep > 200:
-        #     is_finish = True 
-        #     self.succed_time = 0 
-        #     reward -= 2             # -3
-
-
-        # if self.succed_time > 20:
-        #     self.game_level += 1
+        if self.step_inep > 115:
+            is_finish = True 
+            self.succed_time = 0 
+            reward -= 2             # -3
+            self.pass_ep = -1
 
         return reward, is_finish
 

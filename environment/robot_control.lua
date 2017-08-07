@@ -95,6 +95,7 @@ function do_action(robot_hd, joint_hds, action, start_joints)
     else
         restore_pose(robot_hd, joint_hds, current_pos, current_ori, current_joints)
         -- displayInfo('collide '..i..' '..foot_pos[1]..' '..foot_pos[2] )
+        print ('collision')
         return {h, l}, 'f'      
     end
 end
@@ -124,10 +125,10 @@ function get_current_pose(robot_hd, joint_hds)
     return current_pos[3], math.abs(foot_pos[1])
 end
 
-set_collision_hd=function(name1, name2)
-    _collision_hd_1 = simGetCollectionHandle(name1)
-    _collision_hd_2 = simGetCollectionHandle(name2)
-end
+-- set_collision_hd=function(name1, name2)
+--     _collision_hd_1 = simGetCollectionHandle(name1)
+--     _collision_hd_2 = simGetCollectionHandle(name2)
+-- end
 
 
 get_intersection_point=function(x0, y0, x1, y1, r0, r1)

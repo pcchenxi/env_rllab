@@ -2,21 +2,22 @@ from sandbox.rocky.tf.algos.trpo import TRPO
 # from rllab.algos.trpo import TRPO
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
-from sandbox.rocky.tf.policies.categorical_mlp_policy import CategoricalMLPPolicy
+# from sandbox.rocky.tf.policies.categorical_mlp_policy import CategoricalMLPPolicy
 # from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
+from model.conv_merge_policy import ConvMergePolicy
 from rllab.misc.instrument import run_experiment_lite
 
 import joblib
+from environment import env_init
 from environment import env_vrep
 
 # def run_task(*_):
 env = normalize(env_vrep.Simu_env(20000))
 # env = env_vrep.Simu_env(20000)
 
-policy = CategoricalMLPPolicy(
+policy = ConvMergePolicy(
     name = 'policy',
     env_spec=env.spec,
-    hidden_sizes=(32, 32)
 )
 
 # policy = joblib.load('data/policy_params.pkl')
@@ -27,8 +28,8 @@ algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=500,
-    max_path_length=40,
+    batch_size=1000,
+    max_path_length=200,
     n_itr=500,
     discount=0.99,
     # plot = True
